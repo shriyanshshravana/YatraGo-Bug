@@ -1,0 +1,10 @@
+const TK='yg_trips_v2',UK='yg_user_v2',AT='yg_auth_token';
+export const getTrips=()=>{try{return JSON.parse(localStorage.getItem(TK)||'[]')}catch{return[]}};
+export const saveTrips=x=>{localStorage.setItem(TK,JSON.stringify(x));dispatchEvent(new Event('yg-trips'))};
+export const getUser=()=>{try{return JSON.parse(localStorage.getItem(UK)||'null')}catch{return null}};
+export const saveUser=x=>{localStorage.setItem(UK,JSON.stringify(x));dispatchEvent(new Event('yg-user'))};
+export const getToken=()=>localStorage.getItem(AT) || '';
+export const saveToken=x=>{if(x){localStorage.setItem(AT,x);return;}localStorage.removeItem(AT)};
+export const saveAuthSession=({token,user})=>{if(token){saveToken(token);}if(user){saveUser(user);}dispatchEvent(new Event('yg-user'));};
+export const logoutUser=()=>{localStorage.removeItem(UK);localStorage.removeItem(AT);dispatchEvent(new Event('yg-user'))};
+export const makeId=()=>Date.now()+'-'+Math.random().toString(36).slice(2,8);
