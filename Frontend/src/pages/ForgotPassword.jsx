@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Mail, KeyRound } from 'lucide-react';
 import MainLayout from '../layouts/MainLayout';
@@ -9,7 +9,16 @@ export default function ForgotPassword() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [infoMessage, setInfoMessage] = useState('');
+  const [hasExistingSession, setHasExistingSession] = useState(false);
   const nav = useNavigate();
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem('yg_reset_email') || '';
+    if (saved) {
+      setEmail(saved);
+      setHasExistingSession(true);
+    }
+  }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -42,6 +51,17 @@ export default function ForgotPassword() {
         nav('/reset-password');
       }, 1200);
     } catch (err) {
+      if (err.response?.status === 429) {
+        // Cooldown active: An OTP was already sent within the last 60 seconds and is valid for 10 minutes.
+        sessionStorage.setItem('yg_reset_email', email.trim().toLowerCase());
+        setInfoMessage(
+          'An OTP code was already sent recently and is valid for 10 minutes. Redirecting to the code entry page...'
+        );
+        setTimeout(() => {
+          nav('/reset-password');
+        }, 1200);
+        return;
+      }
       setError(getApiErrorMessage(err));
     } finally {
       setLoading(false);
@@ -84,8 +104,52 @@ export default function ForgotPassword() {
             </div>
           </label>
 
+          {hasExistingSession && (
+            <p className="auth-switch" style={{ margin: '4px 0 16px 0', textAlign: 'left', fontSize: '0.84rem' }}>
+              Already received a code for this email?{' '}
+              <Link to="/reset-password" style={{ color: 'var(--color-coral, #CC5963)', fontWeight: '600' }}>
+                Enter code here &rarr;
+              </Link>
+            </p>
+          )}
+
           {error && <p className="form-error" role="alert">{error}</p>}
-          {infoMessage && <p className="form-success" style={{ background: '#fef3c7', color: '#92400e', padding: '10px', borderRadius: '6px', fontSize: '0.85rem' }}>{infoMessage}</p>}
+          {infoMessage && (
+            <div
+              className="form-success"
+              style={{
+                background: '#fef3c7',
+                border: '1px solid #fde68a',
+                color: '#92400e',
+                padding: '12px 14px',
+                borderRadius: '8px',
+                fontSize: '0.85rem',
+                marginBottom: '16px',
+                lineHeight: 1.5,
+              }}
+            >
+              <p style={{ margin: '0 0 8px 0', fontWeight: '500' }}>{infoMessage}</p>
+              <button
+                type="button"
+                onClick={() => nav('/reset-password')}
+                style={{
+                  background: 'var(--color-coral, #CC5963)',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '6px 14px',
+                  fontSize: '0.82rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
+                Go to Enter Code &rarr;
+              </button>
+            </div>
+          )}
 
           <button className="button button-dark button-full" disabled={loading}>
             {loading ? 'Sending code...' : 'Send reset code'} <ArrowRight size={17} />
