@@ -200,6 +200,22 @@ const starterDestinations = [
     bestTime: 'October–March',
     food: 'South Indian breakfasts and cafés',
   },
+  {
+    slug: 'amritsar',
+    name: 'Amritsar',
+    state: 'Punjab',
+    region: 'North India',
+    type: 'Heritage',
+    days: 2,
+    budget: 7500,
+    tag: 'Golden spiritual light',
+    emoji: '🪔',
+    image: '/images/heritage-india.jpg',
+    description: 'The Golden Temple at night, historic streets, rich culinary heritage, and heartfelt warmth make Amritsar an unforgettable cultural destination.',
+    highlights: ['Golden Temple', 'Jallianwala Bagh', 'Wagah Border', 'Heritage Street'],
+    bestTime: 'October–March',
+    food: 'Amritsari kulcha, lassi and makki di roti',
+  },
 ];
 
 const normalizeMongoUri = (rawUri) => {
