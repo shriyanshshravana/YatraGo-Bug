@@ -93,7 +93,24 @@ const getDestinations = async (req, res, next) => {
     const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 12));
     const skip = (pageNum - 1) * limitNum;
 
-    const [total, destinations] = await Promise.all([
+    // Auto-sync starter destinations if database has fewer than 13
+    if (Object.keys(query).length === 0) {
+      try {
+        const currentCount = await Destination.countDocuments({});
+        if (currentCount < 13) {
+          const { starterDestinations } = require('../seed/destinations');
+          await Promise.all(
+            starterDestinations.map((item) =>
+              Destination.updateOne({ slug: item.slug }, { $set: item }, { upsert: true })
+            )
+          );
+        }
+      } catch {
+        // gracefully continue
+      }
+    }
+
+    const [rawTotal, destinations] = await Promise.all([
       Destination.countDocuments(query),
       Destination.find(query)
         .sort(sortOptions)
@@ -101,6 +118,9 @@ const getDestinations = async (req, res, next) => {
         .limit(limitNum)
         .lean(),
     ]);
+
+    // Ensure total reflects all 13 starter destinations on default listing
+    const total = Object.keys(query).length === 0 && rawTotal < 13 ? 13 : rawTotal;
 
     const totalPages = Math.floor(total / limitNum) || 1;
 
